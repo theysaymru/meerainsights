@@ -1,0 +1,2 @@
+# Shell scripts must keep LF endings — CRLF breaks them inside the Linux Docker image
+*.sh text eol=lf
