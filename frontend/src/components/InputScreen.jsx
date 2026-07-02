@@ -55,7 +55,7 @@ export default function InputScreen({
       {/* Hero */}
       <div className="text-center max-w-2xl px-2">
         <div className="inline-flex items-center gap-2 bg-meesho-pink-light text-meesho-pink text-xs font-semibold px-3 py-1 rounded-full mb-4">
-          ✨ AI-free · Deterministic Analysis · Fully Local
+          ⚡ Zero cost per review · Instant results · Fully explainable · English + Hinglish
         </div>
         <h2 className="text-3xl sm:text-4xl font-bold text-meesho-purple mb-4 leading-tight">
           {t.headline}

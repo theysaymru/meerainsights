@@ -2,24 +2,26 @@
 
 const CATEGORIES = {
   clothing: {
-    keywords: ['saree', 'shirt', 'kurta', 'dress', 'top', 'lehenga', 'dupatta', 'fabric',
-      'stitching', 'blouse', 'fabric', 'cloth', 'wear', 'fit', 'size', 'cotton', 'silk',
-      'polyester', 'chiffon', 'georgette', 'material', 'sleeve', 'collar', 'hem', 'print',
-      'embroidery', 'zari', 'border', 'pallu', 'pattern', 'shrink', 'wash'],
+    keywords: ['saree', 'shirt', 'kurta', 'kurti', 'dress', 'top', 'lehenga', 'lehnga',
+      'dupatta', 'fabric', 'stitching', 'blouse', 'cloth', 'kapda', 'wear', 'fit', 'size',
+      'cotton', 'silk', 'polyester', 'chiffon', 'georgette', 'material', 'sleeve', 'collar',
+      'hem', 'print', 'embroidery', 'zari', 'border', 'pallu', 'pattern', 'shrink', 'wash',
+      'silai', 'rang'],
     themes: {
       'Colour & Appearance': ['colour', 'color', 'shade', 'faded', 'fading', 'bleed', 'bleeding',
         'dye', 'looks different', 'not as shown', 'misleading photo', 'picture', 'image',
         'mismatch', 'wrong colour', 'vibrant', 'dull', 'bright', 'dark', 'light',
-        'exactly as shown', 'accurate', 'as expected'],
+        'exactly as shown', 'accurate', 'as expected', 'rang', 'photo se alag', 'alag hai'],
       'Size & Fit': ['size', 'sizing', 'fit', 'fitting', 'small', 'large', 'too big', 'too small',
         'tight', 'loose', 'length', 'measurement', 'size chart', 'runs small', 'runs large',
-        'true to size', 'does not fit', 'adjust', 'waist', 'chest', 'shoulder'],
+        'true to size', 'does not fit', 'adjust', 'waist', 'chest', 'shoulder',
+        'size chota', 'size bada', 'galat size', 'fitting sahi'],
       'Fabric Quality': ['fabric', 'material', 'cloth', 'texture', 'thin', 'transparent', 'soft',
         'rough', 'smooth', 'thick', 'lightweight', 'heavy', 'synthetic', 'blend',
-        'cotton', 'silk', 'polyester', 'quality feels', 'feels cheap', 'feels premium'],
+        'cotton', 'silk', 'polyester', 'quality feels', 'feels cheap', 'feels premium', 'kapda'],
       'Stitching & Finish': ['stitch', 'stitching', 'border', 'hem', 'finish', 'edging', 'fall',
         'loose thread', 'unravel', 'fraying', 'coming apart', 'zari', 'embroidery',
-        'sequin', 'mirror work', 'workmanship', 'poorly stitched', 'well stitched'],
+        'sequin', 'mirror work', 'workmanship', 'poorly stitched', 'well stitched', 'silai'],
       'Print Quality': ['print', 'printed', 'pattern', 'design', 'graphic', 'fade after wash',
         'washed off', 'peeling print', 'cracked print', 'print quality'],
       'Shrinkage & Wash': ['shrink', 'shrank', 'wash', 'washed', 'after washing', 'machine wash',
@@ -27,7 +29,7 @@ const CATEGORIES = {
       'Delivery & Packaging': ['delivery', 'shipping', 'courier', 'package', 'packaging', 'days',
         'late', 'delay', 'damaged', 'tampered', 'missing', 'wrong item', 'arrived'],
       'Value for Money': ['price', 'expensive', 'affordable', 'costly', 'overpriced', 'worth',
-        'value', 'money', 'budget', 'reasonable', 'good deal', 'not worth']
+        'value', 'money', 'budget', 'reasonable', 'good deal', 'not worth', 'paisa', 'paise', 'mehnga', 'mahenga', 'sasta']
     }
   },
   electronics: {
@@ -50,7 +52,7 @@ const CATEGORIES = {
       'Delivery & Packaging': ['delivery', 'shipping', 'courier', 'package', 'packaging', 'days',
         'late', 'delay', 'damaged', 'tampered', 'missing', 'wrong item', 'arrived'],
       'Value for Money': ['price', 'expensive', 'affordable', 'costly', 'overpriced', 'worth',
-        'value', 'money', 'budget', 'reasonable', 'good deal', 'not worth']
+        'value', 'money', 'budget', 'reasonable', 'good deal', 'not worth', 'paisa', 'paise', 'mehnga', 'mahenga', 'sasta']
     }
   },
   furniture: {
@@ -69,7 +71,7 @@ const CATEGORIES = {
       'Delivery & Packaging': ['delivery', 'shipping', 'courier', 'package', 'packaging', 'days',
         'late', 'delay', 'damaged', 'tampered', 'missing', 'wrong item', 'arrived'],
       'Value for Money': ['price', 'expensive', 'affordable', 'costly', 'overpriced', 'worth',
-        'value', 'money', 'budget', 'reasonable', 'good deal', 'not worth']
+        'value', 'money', 'budget', 'reasonable', 'good deal', 'not worth', 'paisa', 'paise', 'mehnga', 'mahenga', 'sasta']
     }
   },
   kitchen: {
@@ -88,7 +90,7 @@ const CATEGORIES = {
       'Delivery & Packaging': ['delivery', 'shipping', 'courier', 'package', 'packaging', 'days',
         'late', 'delay', 'damaged', 'tampered', 'missing', 'wrong item', 'arrived'],
       'Value for Money': ['price', 'expensive', 'affordable', 'costly', 'overpriced', 'worth',
-        'value', 'money', 'budget', 'reasonable', 'good deal', 'not worth']
+        'value', 'money', 'budget', 'reasonable', 'good deal', 'not worth', 'paisa', 'paise', 'mehnga', 'mahenga', 'sasta']
     }
   },
   beauty: {
@@ -106,7 +108,7 @@ const CATEGORIES = {
         'duplicate', 'original', 'authentic', 'expiry', 'expired', 'tampered'],
       'Delivery': ['delivery', 'shipping', 'courier', 'days', 'late', 'delay', 'arrived'],
       'Value for Money': ['price', 'expensive', 'affordable', 'costly', 'overpriced', 'worth',
-        'value', 'money', 'budget', 'reasonable', 'good deal', 'not worth']
+        'value', 'money', 'budget', 'reasonable', 'good deal', 'not worth', 'paisa', 'paise', 'mehnga', 'mahenga', 'sasta']
     }
   }
 };
@@ -125,7 +127,7 @@ const UNIVERSAL_THEMES = {
   'Durability': ['durable', 'broke', 'breaking', 'fell apart', 'lasted', 'lasts', 'long lasting',
     'wear and tear', 'build', 'solid', 'weak', 'flimsy', 'fragile', 'after one use', 'one wash'],
   'Value for Money': ['price', 'expensive', 'affordable', 'costly', 'overpriced', 'worth',
-    'value', 'money', 'budget', 'reasonable', 'good deal', 'not worth'],
+    'value', 'money', 'budget', 'reasonable', 'good deal', 'not worth', 'paisa', 'paise', 'mehnga', 'mahenga', 'sasta'],
   'Returns & Support': ['return', 'refund', 'replacement', 'exchange', 'customer care', 'support',
     'complaint', 'response', 'helpful', 'resolved', 'unresolved', 'easy return', 'difficult return'],
   'Overall Satisfaction': ['love', 'excellent', 'amazing', 'perfect', 'wonderful', 'fantastic',
@@ -143,6 +145,13 @@ const POSITIVE_WORDS = [
   'well packed', 'well packaged', 'no issues', 'no problem',
   'works well', 'fits perfectly', 'looks great', 'feels premium', 'good quality',
   'fast delivery', 'good value', 'worth it', 'worth the price', 'worth every',
+  // Hinglish / transliterated Hindi — how most real Meesho reviews are written.
+  // Longer distinctive tokens only, to avoid substring collisions with English words.
+  'accha', 'achha', 'acha hai', 'bahut acha', 'badhiya', 'badiya', 'zabardast',
+  'shandar', 'kamaal', 'ekdum sahi', 'ekdum mast', 'mast hai', 'mast product',
+  'paisa vasool', 'paise vasool', 'dil khush', 'bahut sundar', 'sundar hai',
+  'behtareen', 'lajawab', 'majboot', 'jhakas', 'jhakkas', 'bahut khoob',
+  'ekdum perfect', 'bilkul sahi', 'sahi hai', 'pasand aaya', 'pasand aya',
   // NOTE: "good", "durable", "sturdy", "solid", "easy", "fast", "quick", "smooth", "soft"
   // are intentionally excluded — they appear in negative contexts like "drains quickly",
   // "too solid to open", "goes bad" etc. Handled via POSITIVE_OUTCOME_PATTERNS instead.
@@ -158,7 +167,16 @@ const NEGATIVE_WORDS = [
   'does not work', 'shrink', 'shrank', 'stitching loose', 'fraying', 'peeling',
   'do not buy', 'waste of money', 'very poor', 'very slow', 'extremely slow',
   'keep disconnecting', 'keeps disconnecting', 'keeps crashing', 'no response',
-  'rejected', 'cheated', 'fraud', 'counterfeit', 'rusted', 'rust'
+  'rejected', 'cheated', 'fraud', 'counterfeit', 'rusted', 'rust',
+  // Hinglish / transliterated Hindi — longer distinctive tokens to avoid
+  // substring collisions with English words.
+  'bakwas', 'bakwaas', 'ghatiya', 'bekar', 'bekaar', 'kharab', 'kharaab',
+  'faltu', 'nakli', 'dhokha', 'barbad', 'kachra', 'ganda hai', 'ganda product',
+  'paisa waste', 'paise waste', 'paisa barbad', 'paise barbad', 'mat kharido',
+  'mat lena', 'bilkul bekar', 'ekdum bakwas', 'third class', 'tut gaya',
+  'toot gaya', 'phat gaya', 'fat gaya', 'kamzor', 'jhoot', 'galat product',
+  'galat size', 'galat colour', 'galat color', 'der se aaya', 'late aaya',
+  'wapas kar', 'return kar diya', 'mehnga', 'mahenga'
 ];
 
 // ─── Outcome-based patterns (Meaning > Emotion words) ───────────────────────

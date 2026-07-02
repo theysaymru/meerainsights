@@ -41,9 +41,18 @@ export default function App() {
       fetch(`${API_BASE}/api/analyses/${id}`)
         .then(r => r.ok ? r.json() : null)
         .then(data => {
-          if (data) { setAnalysis(data); setScreen('dashboard'); }
+          if (data) {
+            setAnalysis(data);
+            setScreen('dashboard');
+          } else {
+            window.history.replaceState({}, '', window.location.pathname);
+            showToast('That shared analysis has expired — paste reviews below to run a fresh one.', 'warning');
+          }
         })
-        .catch(() => {});
+        .catch(() => {
+          window.history.replaceState({}, '', window.location.pathname);
+          showToast('Could not load the shared analysis — paste reviews below to run a fresh one.', 'warning');
+        });
     }
   }, []);
 
