@@ -34,12 +34,14 @@ const AI_ENDPOINT = process.env.AI_ENDPOINT || 'https://gateway-buildathon.ltl.s
 const AI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o';
 const MAX_CONTEXT_CHARS = 14000; // cap reviews sent to the model to control token cost
 
-// GET /api/ai-status — the chat bubble shows whenever a key is configured.
-// (We intentionally do NOT gate on live gateway reachability, per product choice:
-// the bubble should always be visible; if the gateway is down, asking shows a
-// clear error in the chat rather than hiding the feature.)
+// GET /api/ai-status — the chat bubble shows when a key is configured, EXCEPT on
+// Vercel. The AI gateway is internal to the buildathon network and returns
+// "Access Denied" to Vercel, so the chat can't work there — we hide it on Vercel
+// (which sets the VERCEL env var automatically) to avoid a dead feature, while
+// keeping it on the buildathon deployment where it belongs.
 app.get('/api/ai-status', (req, res) => {
-  res.json({ enabled: Boolean(process.env.OPENAI_API_KEY) });
+  const onVercel = Boolean(process.env.VERCEL || process.env.VERCEL_ENV);
+  res.json({ enabled: Boolean(process.env.OPENAI_API_KEY) && !onVercel });
 });
 
 // Single swappable provider call. To move to Claude later, change only this function.
