@@ -22,6 +22,102 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// ─── "Ask Meera" — optional AI layer ────────────────────────────────────────
+// Additive on top of the deterministic engine. If no API key is configured, or
+// the provider call fails, the rest of the app is unaffected — this endpoint
+// simply reports that AI mode is unavailable. The key is read from the
+// environment only (OPENAI_API_KEY) and is never committed or logged.
+
+// AI provider config — points at the Buildathon Bifrost gateway by default
+// (OpenAI-compatible /v1/chat/completions). All values env-overridable.
+const AI_ENDPOINT = process.env.AI_ENDPOINT || 'https://gateway-buildathon.ltl.sh/v1/chat/completions';
+const AI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o';
+const MAX_CONTEXT_CHARS = 14000; // cap reviews sent to the model to control token cost
+
+// GET /api/ai-status — lets the frontend show/hide the chat without exposing the key
+app.get('/api/ai-status', (req, res) => {
+  res.json({ enabled: Boolean(process.env.OPENAI_API_KEY) });
+});
+
+// Single swappable provider call. To move to Claude later, change only this function.
+async function callLLM(question, contextText) {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) return { ok: false, error: 'AI mode is not configured on the server.' };
+
+  const system =
+    'You are Meera, a review-analysis assistant for Meesho sellers. ' +
+    'Answer ONLY using the customer reviews provided below. Quote verbatim snippets in "quotes" as evidence. ' +
+    'If the reviews do not cover the question, say so plainly — never invent facts, policies, or numbers. ' +
+    'Reviews may be in English or romanized Hindi/other Indian languages; judge meaning, not keywords. ' +
+    'Be concise and practical, like advice to a busy seller.';
+
+  try {
+    const resp = await fetch(AI_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model: AI_MODEL,
+        temperature: 0.2,
+        max_tokens: 500,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: `CUSTOMER REVIEWS:\n${contextText}\n\nQUESTION: ${question}` },
+        ],
+      }),
+    });
+    if (!resp.ok) {
+      const detail = await resp.text().catch(() => '');
+      console.error('OpenAI error', resp.status, detail.slice(0, 300));
+      return { ok: false, error: `AI provider returned ${resp.status}. Try again shortly.` };
+    }
+    const data = await resp.json();
+    const answer = data?.choices?.[0]?.message?.content?.trim();
+    if (!answer) return { ok: false, error: 'AI returned an empty response.' };
+    return { ok: true, answer };
+  } catch (err) {
+    console.error('callLLM failed:', err.message);
+    return { ok: false, error: 'Could not reach the AI provider.' };
+  }
+}
+
+// POST /api/ask — { question, reviews? , analysisId? }
+app.post('/api/ask', async (req, res) => {
+  try {
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(503).json({ error: 'AI mode is not enabled on this server.' });
+    }
+    const { question, reviews, analysisId } = req.body || {};
+    if (!question || typeof question !== 'string' || question.trim().length === 0) {
+      return res.status(400).json({ error: 'A question is required.' });
+    }
+
+    // Ground the answer in the actual raw reviews: prefer inline text, else look
+    // up the raw reviews stored for this analysis id.
+    let contextText = typeof reviews === 'string' ? reviews : '';
+    if (!contextText && analysisId) {
+      const row = db.prepare(
+        `SELECT rb.raw_reviews AS raw
+         FROM analyses a JOIN review_batches rb ON rb.id = a.batch_id
+         WHERE a.id = ?`
+      ).get(analysisId);
+      if (row && row.raw) contextText = row.raw;
+    }
+    if (!contextText) {
+      return res.status(400).json({ error: 'No reviews available to answer from.' });
+    }
+    if (contextText.length > MAX_CONTEXT_CHARS) {
+      contextText = contextText.slice(0, MAX_CONTEXT_CHARS) + '\n…(truncated)';
+    }
+
+    const result = await callLLM(question.trim(), contextText);
+    if (!result.ok) return res.status(502).json({ error: result.error });
+    return res.json({ answer: result.answer });
+  } catch (err) {
+    console.error('POST /api/ask error:', err);
+    return res.status(500).json({ error: 'Ask Meera failed. Please try again.' });
+  }
+});
+
 // POST /api/analyze
 app.post('/api/analyze', (req, res) => {
   try {
