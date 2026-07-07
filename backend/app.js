@@ -50,13 +50,17 @@ async function classifySentimentsAI(lines) {
 
   const BATCH = 40;
   const system =
-    'You classify Meesho customer reviews by sentiment. For each review output exactly one label: ' +
-    'positive (satisfaction / good outcome), negative (problem, complaint, bad outcome), ' +
-    'mixed (BOTH praise AND complaint in the same review), or neutral (ONLY a pure factual ' +
-    'statement with zero opinion — rare). Judge by meaning, not keywords. Reviews may be ' +
-    'code-mixed (Hinglish etc.): "paisa vasool"/"badhiya"=positive, "bekaar"/"ghatiya"/"bakwaas"=negative, ' +
-    '"theek thaak"=mixed. Respond with ONLY a JSON array, no prose: ' +
-    '[{"id":0,"sentiment":"positive"}, ...] covering every id.';
+    'You classify each Meesho customer review into EXACTLY ONE of three sentiments: ' +
+    'positive, neutral, or negative. Definitions: ' +
+    'positive = the customer is satisfied / reports a good outcome. ' +
+    'negative = the customer reports a problem, complaint, or bad outcome. ' +
+    'neutral = no clear positive or negative lean — i.e. a lukewarm/so-so review, ' +
+    'a balanced review that mixes praise AND complaint roughly equally, or a purely ' +
+    'factual statement with no opinion. ' +
+    'Judge by meaning, not keywords. Reviews may be code-mixed (Hinglish etc.): ' +
+    '"paisa vasool"/"badhiya"/"mast"=positive, "bekaar"/"ghatiya"/"bakwaas"=negative, ' +
+    '"theek thaak"/"chalega"=neutral. Every review must get one of the three labels. ' +
+    'Respond with ONLY a JSON array, no prose: [{"id":0,"sentiment":"positive"}, ...] covering every id.';
 
   for (let start = 0; start < lines.length; start += BATCH) {
     const batch = lines.slice(start, start + BATCH);
@@ -87,7 +91,7 @@ async function classifySentimentsAI(lines) {
       for (const item of arr) {
         const idx = Number(item.id);
         const s = String(item.sentiment || '').toLowerCase();
-        if (batch[idx] && ['positive', 'negative', 'mixed', 'neutral'].includes(s)) {
+        if (batch[idx] && ['positive', 'negative', 'neutral'].includes(s)) {
           map.set(batch[idx], s);
         }
       }
