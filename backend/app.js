@@ -34,36 +34,12 @@ const AI_ENDPOINT = process.env.AI_ENDPOINT || 'https://gateway-buildathon.ltl.s
 const AI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o';
 const MAX_CONTEXT_CHARS = 14000; // cap reviews sent to the model to control token cost
 
-// GET /api/ai-status — the chat shows only if a key is configured AND the gateway
-// is actually reachable from where the backend runs. This auto-hides the feature
-// on hosts that can't reach the (internal-network) gateway — e.g. Vercel — instead
-// of showing a chat that errors when clicked. Result is cached to avoid probing on
-// every dashboard load.
-let _aiProbe = { enabled: false, ts: 0 };
-const AI_PROBE_TTL_MS = 5 * 60 * 1000;
-
-async function probeGatewayReachable() {
-  if (!process.env.OPENAI_API_KEY) return false;
-  try {
-    const resp = await fetch(AI_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
-      body: JSON.stringify({ model: AI_MODEL, max_tokens: 1, messages: [{ role: 'user', content: 'ping' }] }),
-      signal: AbortSignal.timeout(6000),
-    });
-    return resp.ok; // 2xx = gateway reachable and accepting our creds
-  } catch {
-    return false;
-  }
-}
-
-app.get('/api/ai-status', async (req, res) => {
-  if (!process.env.OPENAI_API_KEY) return res.json({ enabled: false });
-  const now = Date.now();
-  if (now - _aiProbe.ts > AI_PROBE_TTL_MS) {
-    _aiProbe = { enabled: await probeGatewayReachable(), ts: now };
-  }
-  res.json({ enabled: _aiProbe.enabled });
+// GET /api/ai-status — the chat bubble shows whenever a key is configured.
+// (We intentionally do NOT gate on live gateway reachability, per product choice:
+// the bubble should always be visible; if the gateway is down, asking shows a
+// clear error in the chat rather than hiding the feature.)
+app.get('/api/ai-status', (req, res) => {
+  res.json({ enabled: Boolean(process.env.OPENAI_API_KEY) });
 });
 
 // Single swappable provider call. To move to Claude later, change only this function.
@@ -93,9 +69,9 @@ async function callLLM(question, contextText) {
       }),
     });
     if (!resp.ok) {
-      const detail = await resp.text().catch(() => '');
-      console.error('OpenAI error', resp.status, detail.slice(0, 300));
-      return { ok: false, error: `AI provider returned ${resp.status}. Try again shortly.` };
+      const detail = (await resp.text().catch(() => '')).replace(/\s+/g, ' ').trim().slice(0, 200);
+      console.error('AI gateway error', resp.status, detail);
+      return { ok: false, error: `AI gateway returned ${resp.status}${detail ? ' — ' + detail : ''}` };
     }
     const data = await resp.json();
     const answer = data?.choices?.[0]?.message?.content?.trim();

@@ -51,9 +51,9 @@ export default function AskMeera({ analysisId, reviews, apiBase }) {
     }
   };
 
-  // Show the widget when the gateway is reachable, or in local dev for previewing the UI.
-  const show = enabled === true || (enabled !== null && import.meta.env.DEV);
-  if (!show) return null;
+  // Show the bubble whenever AI is configured (key present). If the gateway is
+  // unreachable, asking surfaces a clear error in the chat instead of hiding it.
+  if (enabled !== true) return null;
 
   return (
     <>
