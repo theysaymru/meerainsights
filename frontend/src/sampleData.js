@@ -47,7 +47,15 @@ Durable and well built. Using it every day and there is zero wear and tear even 
 Totally fake product. Not the brand shown in listing. Seller is misleading customers with wrong photos.
 Amazing value. Got a premium looking product for a very budget friendly price. Very happy with purchase.
 Received broken item with no protective packaging inside. Seller needs to improve packaging standards.
-Perfect in every way. Size, colour, quality all match the listing exactly. Highly recommend this seller.`;
+Perfect in every way. Size, colour, quality all match the listing exactly. Highly recommend this seller.
+The saree arrived on Wednesday in a plain packet as mentioned in the listing.
+It is an average product, nothing special to mention either way.
+Colour is okay and the fabric is okay, it just does the job for daily wear.
+Received the order as per the description, no issues to report so far.
+The kurta is fine for regular use, theek thaak for the price paid.
+Standard product, chalega for occasional wear. Neither great nor bad.
+Fabric is decent, fitting is decent, overall an okay purchase.
+Product delivered in a week, it is exactly as shown, nothing more to add.`;
 
 export const SAMPLE_ELECTRONICS = `Bluetooth earphones connected instantly and the sound quality is absolutely amazing for the price.
 Battery drains way too fast. Barely lasts 3 hours on full charge. Expected at least 6 hours backup.
@@ -78,7 +86,13 @@ Works perfectly as described. Sound quality, battery life and build all match th
 Overheating issue after 30 minutes of use. Gets uncomfortably hot during charging. Safety concern.
 Fast charging works very well. Goes from 0 to 80 percent in just 45 minutes. Excellent feature.
 Packaging was damaged and device had scratches when I opened the box. Clearly mishandled by courier.
-Outstanding product. Exceeded all my expectations. Will definitely order again from this seller.`;
+Outstanding product. Exceeded all my expectations. Will definitely order again from this seller.
+The earphones arrived on Tuesday in standard packaging as listed.
+It works, nothing remarkable about it, theek thaak for the price.
+Average sound and average battery, it just does the basic job.
+Product is okay for casual use, chalega. Neither good nor bad.
+Received exactly as described, no issues and nothing special to report.
+It is a basic device, does what it says, an okay purchase overall.`;
 
 export const SAMPLE_KITCHEN = `Non-stick coating started peeling after just 2 uses. Very unsafe for cooking. Returned immediately.
 The pressure cooker whistles perfectly and food cooks evenly. Excellent quality stainless steel build.
@@ -109,4 +123,10 @@ Great for daily cooking. Easy to use, easy to clean, and food quality is noticea
 Wrong product delivered. Ordered 3 litre but received 1.5 litre version. Size clearly incorrect.
 Excellent heat distribution. No hot spots and food cooks perfectly even on low flame setting.
 Lid does not fit the pan properly. There is a visible gap all around. Sizing mismatch in the set.
-Best kitchen purchase I have made this year. Durable, safe, easy to clean and very good value.`;
+Best kitchen purchase I have made this year. Durable, safe, easy to clean and very good value.
+The pan arrived on Friday in a plain box as per the listing.
+It is an average cooker, does the basic job, nothing special.
+Okay product, theek thaak for the price. Neither impressive nor bad.
+Works fine for daily cooking, it is exactly as shown in the photos.
+Received as described, decent enough for regular use.
+Standard quality, chalega. No complaints and nothing remarkable either.`;
