@@ -262,7 +262,19 @@ function detectCategory(reviews) {
 // Neutral is RARE — only pure factual statements with zero evaluative signal.
 // Mixed = both positive AND negative signals in the SAME item.
 
+// Optional AI override: a Map(reviewText -> sentiment) set by the server before
+// analysis when the LLM gateway is reachable. detectSentiment consults it first
+// and falls back to the deterministic keyword logic for any review the AI didn't
+// label — so the engine keeps working everywhere, AI just improves accuracy.
+let _aiOverride = null;
+function setSentimentOverride(map) { _aiOverride = map || null; }
+
 function detectSentiment(text) {
+  if (_aiOverride) {
+    const v = _aiOverride.get(text);
+    if (v === 'positive' || v === 'negative' || v === 'mixed' || v === 'neutral') return v;
+  }
+
   const lower = text.toLowerCase();
 
   // Step 1: outcome-based pattern signals (meaning > emotion words)
@@ -654,4 +666,4 @@ function analyzeReviews(rawReviews) {
   };
 }
 
-module.exports = { analyzeReviews };
+module.exports = { analyzeReviews, setSentimentOverride };

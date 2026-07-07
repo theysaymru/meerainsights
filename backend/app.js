@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { initDb } = require('./db');
-const { analyzeReviews } = require('./analysis');
+const { analyzeReviews, setSentimentOverride } = require('./analysis');
 
 const app = express();
 const PORT = process.env.PORT || 8090;
@@ -33,6 +33,68 @@ app.get('/api/health', (req, res) => {
 const AI_ENDPOINT = process.env.AI_ENDPOINT || 'https://gateway-buildathon.ltl.sh/v1/chat/completions';
 const AI_MODEL = process.env.OPENAI_MODEL || 'gpt-4o';
 const MAX_CONTEXT_CHARS = 14000; // cap reviews sent to the model to control token cost
+
+// AI is used only where the gateway is reachable: a key is set AND we're not on
+// Vercel (gateway blocks Vercel). Elsewhere the deterministic engine is used.
+function aiEnabled() {
+  return Boolean(process.env.OPENAI_API_KEY) && !(process.env.VERCEL || process.env.VERCEL_ENV);
+}
+
+// Classify each review's sentiment with the LLM for higher accuracy than keywords.
+// Returns a Map(reviewText -> 'positive'|'negative'|'mixed'|'neutral'). Any review
+// the AI can't label is simply left out → detectSentiment falls back to keywords.
+// Never throws — returns whatever it managed (possibly empty) so analysis proceeds.
+async function classifySentimentsAI(lines) {
+  const map = new Map();
+  if (!aiEnabled() || lines.length === 0) return map;
+
+  const BATCH = 40;
+  const system =
+    'You classify Meesho customer reviews by sentiment. For each review output exactly one label: ' +
+    'positive (satisfaction / good outcome), negative (problem, complaint, bad outcome), ' +
+    'mixed (BOTH praise AND complaint in the same review), or neutral (ONLY a pure factual ' +
+    'statement with zero opinion — rare). Judge by meaning, not keywords. Reviews may be ' +
+    'code-mixed (Hinglish etc.): "paisa vasool"/"badhiya"=positive, "bekaar"/"ghatiya"/"bakwaas"=negative, ' +
+    '"theek thaak"=mixed. Respond with ONLY a JSON array, no prose: ' +
+    '[{"id":0,"sentiment":"positive"}, ...] covering every id.';
+
+  for (let start = 0; start < lines.length; start += BATCH) {
+    const batch = lines.slice(start, start + BATCH);
+    const numbered = batch.map((t, i) => `${i}. ${t}`).join('\n');
+    try {
+      const resp = await fetch(AI_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+        body: JSON.stringify({
+          model: AI_MODEL,
+          temperature: 0,
+          max_tokens: 1500,
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content: `Classify these ${batch.length} reviews:\n${numbered}` },
+          ],
+        }),
+        signal: AbortSignal.timeout(20000),
+      });
+      if (!resp.ok) continue; // leave this batch to keyword fallback
+      const data = await resp.json();
+      let content = data?.choices?.[0]?.message?.content?.trim() || '';
+      content = content.replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+      const jsonStart = content.indexOf('[');
+      const jsonEnd = content.lastIndexOf(']');
+      if (jsonStart === -1 || jsonEnd === -1) continue;
+      const arr = JSON.parse(content.slice(jsonStart, jsonEnd + 1));
+      for (const item of arr) {
+        const idx = Number(item.id);
+        const s = String(item.sentiment || '').toLowerCase();
+        if (batch[idx] && ['positive', 'negative', 'mixed', 'neutral'].includes(s)) {
+          map.set(batch[idx], s);
+        }
+      }
+    } catch { /* batch failed — those reviews fall back to keyword logic */ }
+  }
+  return map;
+}
 
 // GET /api/ai-status — the chat bubble shows when a key is configured, EXCEPT on
 // Vercel. The AI gateway is internal to the buildathon network and returns
@@ -124,7 +186,7 @@ app.post('/api/ask', async (req, res) => {
 });
 
 // POST /api/analyze
-app.post('/api/analyze', (req, res) => {
+app.post('/api/analyze', async (req, res) => {
   try {
     const { reviews } = req.body || {};
 
@@ -141,7 +203,23 @@ app.post('/api/analyze', (req, res) => {
     const batchResult = db.prepare('INSERT INTO review_batches (raw_reviews) VALUES (?)').run(reviews);
     const batchId = batchResult.lastInsertRowid;
 
-    const analysisData = analyzeReviews(reviews);
+    // When the AI gateway is reachable, let the LLM classify sentiment for higher
+    // accuracy; detectSentiment falls back to keywords for anything it doesn't label.
+    // The same line-splitting as analyzeReviews so the override keys match.
+    let overrideMap = null;
+    if (aiEnabled()) {
+      const lines = reviews.split('\n').map(l => l.trim()).filter(l => l.length > 5);
+      try { overrideMap = await classifySentimentsAI(lines); } catch { overrideMap = null; }
+    }
+
+    let analysisData;
+    setSentimentOverride(overrideMap);
+    try {
+      analysisData = analyzeReviews(reviews);
+    } finally {
+      setSentimentOverride(null); // never leak the override to the next request
+    }
+    analysisData.sentimentEngine = (overrideMap && overrideMap.size > 0) ? 'ai' : 'deterministic';
 
     const analysisResult = db.prepare('INSERT INTO analyses (batch_id, analysis_json) VALUES (?, ?)').run(batchId, '{}');
     const analysisId = analysisResult.lastInsertRowid;
