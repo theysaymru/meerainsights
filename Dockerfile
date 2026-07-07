@@ -52,6 +52,17 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
+# Optional AI config for "Ask Meera". Passed at build time via --build-arg so the
+# key never lives in git (the Dockerfile only names the args). The buildathon
+# deploy has no env-var injection, so baking these in is how the deployed
+# container gets them. Empty by default → AI chat simply stays hidden.
+ARG OPENAI_API_KEY=""
+ARG AI_ENDPOINT="https://gateway-buildathon.ltl.sh/v1/chat/completions"
+ARG OPENAI_MODEL="gpt-4o"
+ENV OPENAI_API_KEY=$OPENAI_API_KEY \
+    AI_ENDPOINT=$AI_ENDPOINT \
+    OPENAI_MODEL=$OPENAI_MODEL
+
 EXPOSE 9080 8090
 
 CMD ["/app/entrypoint.sh"]
