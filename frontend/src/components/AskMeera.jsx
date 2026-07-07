@@ -4,12 +4,13 @@ const SUGGESTED = [
   'What should I fix first?',
   'Are customers happy with the quality?',
   'What do people love most?',
-  'Any delivery or packaging complaints?',
+  'Any delivery complaints?',
 ];
 
-export default function AskMeera({ analysisId, reviews, apiBase, onShowToast }) {
-  const [enabled, setEnabled] = useState(null); // null = checking
-  const [messages, setMessages] = useState([]); // { role: 'user'|'meera', text }
+export default function AskMeera({ analysisId, reviews, apiBase }) {
+  const [enabled, setEnabled] = useState(null); // gateway reachable?
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState([]); // { role: 'user'|'meera', text, error? }
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
@@ -23,7 +24,7 @@ export default function AskMeera({ analysisId, reviews, apiBase, onShowToast }) 
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [messages, loading]);
+  }, [messages, loading, open]);
 
   const ask = async (question) => {
     const q = (question ?? input).trim();
@@ -50,26 +51,45 @@ export default function AskMeera({ analysisId, reviews, apiBase, onShowToast }) 
     }
   };
 
-  // AI mode not configured — hide the feature entirely so the app looks complete.
-  if (enabled === false) return null;
-  if (enabled === null) return null; // still checking; render nothing to avoid flicker
+  // Show the widget when the gateway is reachable, or in local dev for previewing the UI.
+  const show = enabled === true || (enabled !== null && import.meta.env.DEV);
+  if (!show) return null;
 
   return (
-    <section>
-      <div className="bg-gradient-to-br from-meesho-purple/5 to-meesho-pink/5 rounded-2xl border border-meesho-purple/20 p-5 sm:p-6">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-xl">💬</span>
-          <h2 className="font-bold text-meesho-purple text-lg">Ask Meera</h2>
-          <span className="text-xs bg-meesho-purple/10 text-meesho-purple px-2 py-0.5 rounded-full font-semibold">AI</span>
-        </div>
-        <p className="text-xs text-gray-400 mb-4">Ask anything about these reviews — answers are grounded in the actual customer text.</p>
+    <>
+      {/* Floating launcher button */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        aria-label="Ask Meera"
+        className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-meesho-pink text-white shadow-pink flex items-center justify-center text-2xl hover:bg-meesho-pink-dark active:scale-95 transition-all"
+      >
+        {open ? '✕' : '💬'}
+      </button>
 
-        {/* Conversation */}
-        {messages.length > 0 && (
-          <div ref={scrollRef} className="max-h-80 overflow-y-auto space-y-3 mb-4 pr-1">
+      {/* Chat panel */}
+      {open && (
+        <div className="fixed bottom-24 right-5 z-50 w-[92vw] max-w-sm h-[70vh] max-h-[560px] bg-white rounded-2xl shadow-2xl border border-meesho-pink-light flex flex-col overflow-hidden animate-fade-in">
+          {/* Header */}
+          <div className="bg-meesho-purple text-white px-4 py-3 flex items-center gap-2 flex-shrink-0">
+            <span className="text-lg">💬</span>
+            <div className="flex-1">
+              <div className="font-bold text-sm leading-tight">Ask Meera</div>
+              <div className="text-[11px] opacity-70 leading-tight">Answers from your reviews only</div>
+            </div>
+            <button onClick={() => setOpen(false)} aria-label="Close" className="opacity-80 hover:opacity-100 text-lg leading-none">✕</button>
+          </div>
+
+          {/* Messages */}
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-3 bg-meesho-pink-bg/40">
+            {messages.length === 0 && (
+              <div className="text-center text-gray-400 text-xs mt-4 mb-2">
+                <div className="text-3xl mb-2">🧵</div>
+                Ask me anything about these reviews.
+              </div>
+            )}
             {messages.map((m, i) => (
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap ${
+                <div className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
                   m.role === 'user'
                     ? 'bg-meesho-pink text-white rounded-br-sm'
                     : m.error
@@ -82,7 +102,7 @@ export default function AskMeera({ analysisId, reviews, apiBase, onShowToast }) 
             ))}
             {loading && (
               <div className="flex justify-start">
-                <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
+                <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-sm px-3.5 py-2.5 shadow-sm">
                   <span className="flex gap-1">
                     <span className="w-2 h-2 bg-meesho-purple/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-2 h-2 bg-meesho-purple/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -92,37 +112,36 @@ export default function AskMeera({ analysisId, reviews, apiBase, onShowToast }) 
               </div>
             )}
           </div>
-        )}
 
-        {/* Suggested questions (only before first message) */}
-        {messages.length === 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {SUGGESTED.map(s => (
-              <button key={s} onClick={() => ask(s)} disabled={loading}
-                className="text-xs px-3 py-1.5 rounded-full border border-meesho-purple/30 text-meesho-purple hover:bg-meesho-purple/5 transition-all disabled:opacity-40 font-medium">
-                {s}
-              </button>
-            ))}
+          {/* Suggested questions (before first message) */}
+          {messages.length === 0 && (
+            <div className="flex flex-wrap gap-1.5 px-3 pb-2 flex-shrink-0">
+              {SUGGESTED.map(s => (
+                <button key={s} onClick={() => ask(s)} disabled={loading}
+                  className="text-[11px] px-2.5 py-1 rounded-full border border-meesho-purple/30 text-meesho-purple hover:bg-meesho-purple/5 transition-all disabled:opacity-40 font-medium">
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Input */}
+          <div className="flex gap-2 p-3 border-t border-gray-100 flex-shrink-0">
+            <input
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') ask(); }}
+              placeholder="Ask about these reviews…"
+              disabled={loading}
+              className="flex-1 rounded-xl border border-gray-200 focus:border-meesho-purple focus:ring-2 focus:ring-meesho-purple/20 px-3.5 py-2 text-sm text-gray-700 transition-all disabled:opacity-50 placeholder-gray-400"
+            />
+            <button onClick={() => ask()} disabled={loading || !input.trim()}
+              className="px-4 py-2 rounded-xl bg-meesho-purple text-white font-semibold text-sm hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+              {loading ? '…' : 'Send'}
+            </button>
           </div>
-        )}
-
-        {/* Input */}
-        <div className="flex gap-2">
-          <input
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') ask(); }}
-            placeholder="Ask about these reviews…"
-            disabled={loading}
-            className="flex-1 rounded-xl border border-gray-200 focus:border-meesho-purple focus:ring-2 focus:ring-meesho-purple/20 px-4 py-2.5 text-sm text-gray-700 transition-all disabled:opacity-50 placeholder-gray-400"
-          />
-          <button onClick={() => ask()} disabled={loading || !input.trim()}
-            className="px-5 py-2.5 rounded-xl bg-meesho-purple text-white font-semibold text-sm hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-            {loading ? '…' : 'Ask'}
-          </button>
         </div>
-        <p className="text-xs text-gray-300 mt-2">Meera only answers from your reviews and won't invent information.</p>
-      </div>
-    </section>
+      )}
+    </>
   );
 }
