@@ -3,6 +3,7 @@ import Header from './components/Header';
 import InputScreen from './components/InputScreen';
 import Dashboard from './components/Dashboard';
 import CompareView from './components/CompareView';
+import AskMeera from './components/AskMeera';
 import Toast from './components/Toast';
 import { translations } from './translations';
 
@@ -159,6 +160,14 @@ export default function App() {
           />
         )}
       </main>
+      {/* Ask Meera — app-wide floating assistant. On the dashboard it answers about
+          the current analysis; on the homepage it answers about whatever reviews
+          are loaded, and guides the user if none are yet. */}
+      <AskMeera
+        apiBase={API_BASE}
+        analysisId={screen === 'dashboard' ? analysis?.id : null}
+        reviews={screen === 'dashboard' ? null : reviewText}
+      />
       <Toast toasts={toasts} onDismiss={dismissToast} />
     </div>
   );

@@ -27,11 +27,18 @@ export default function AskMeera({ analysisId, reviews, apiBase }) {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, loading, open]);
 
+  const hasContext = Boolean((reviews && reviews.trim()) || analysisId);
+
   const ask = async (question) => {
     const q = (question ?? input).trim();
     if (!q || loading) return;
     setInput('');
     setMessages(prev => [...prev, { role: 'user', text: q }]);
+    // No reviews loaded yet (e.g. empty homepage) — guide instead of erroring.
+    if (!hasContext) {
+      setMessages(prev => [...prev, { role: 'meera', text: 'Paste or load some customer reviews first (try a sample category), then I can answer questions about them.' }]);
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch(`${apiBase}/api/ask`, {

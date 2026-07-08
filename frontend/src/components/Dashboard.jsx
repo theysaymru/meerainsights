@@ -3,7 +3,6 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 import SentimentChart from './SentimentChart';
 import ThemesChart from './ThemesChart';
 import AutoReplies from './AutoReplies';
-import AskMeera from './AskMeera';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -542,9 +541,6 @@ export default function Dashboard({ analysis, onBack, t, onShowToast, onUpdateRe
           </div>
         </section>
       )}
-
-      {/* Ask Meera — optional AI chat (auto-hides if AI mode is off) */}
-      <AskMeera analysisId={id} apiBase={apiBase} onShowToast={onShowToast} />
 
       {/* Complaints & Praises */}
       {(topComplaints.length > 0 || topPraises.length > 0) && (
