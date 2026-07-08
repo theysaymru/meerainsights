@@ -10,6 +10,7 @@ const SUGGESTED = [
 export default function AskMeera({ analysisId, reviews, apiBase }) {
   const [enabled, setEnabled] = useState(null); // gateway reachable?
   const [open, setOpen] = useState(false);
+  const [showHint, setShowHint] = useState(true);
   const [messages, setMessages] = useState([]); // { role: 'user'|'meera', text, error? }
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -57,10 +58,28 @@ export default function AskMeera({ analysisId, reviews, apiBase }) {
 
   return (
     <>
+      {/* One-time hint label so users know what the bubble is for */}
+      {!open && showHint && (
+        <div className="fixed bottom-6 right-24 z-50 max-w-[220px] bg-white border border-meesho-purple/20 rounded-2xl rounded-br-sm shadow-card px-3.5 py-2.5 animate-fade-in">
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowHint(false); }}
+            aria-label="Dismiss"
+            className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-gray-200 text-gray-500 text-xs flex items-center justify-center hover:bg-gray-300"
+          >✕</button>
+          <button onClick={() => { setOpen(true); setShowHint(false); }} className="text-left">
+            <div className="text-xs font-bold text-meesho-purple mb-0.5">💬 Ask Meera — AI assistant</div>
+            <div className="text-[11px] text-gray-500 leading-snug">
+              Ask questions about these reviews in plain language — "what should I fix?", "are customers happy?" — answered from the actual review text.
+            </div>
+          </button>
+        </div>
+      )}
+
       {/* Floating launcher button */}
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={() => { setOpen(o => !o); setShowHint(false); }}
         aria-label="Ask Meera"
+        title="Ask Meera — AI Q&A about your reviews"
         className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full bg-meesho-pink text-white shadow-pink flex items-center justify-center text-2xl hover:bg-meesho-pink-dark active:scale-95 transition-all"
       >
         {open ? '✕' : '💬'}
@@ -82,9 +101,15 @@ export default function AskMeera({ analysisId, reviews, apiBase }) {
           {/* Messages */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-3 bg-meesho-pink-bg/40">
             {messages.length === 0 && (
-              <div className="text-center text-gray-400 text-xs mt-4 mb-2">
+              <div className="text-center text-gray-500 text-xs mt-3 mb-2 px-2">
                 <div className="text-3xl mb-2">🧵</div>
-                Ask me anything about these reviews.
+                <p className="font-semibold text-meesho-purple mb-1">Hi, I'm Meera's AI assistant</p>
+                <p className="leading-relaxed text-gray-400">
+                  I read all your customer reviews so you don't have to.
+                  Ask me anything in plain language — what to fix, what customers love, delivery issues —
+                  and I'll answer using only what they actually wrote, with quotes. I never make things up.
+                </p>
+                <p className="text-gray-300 mt-2">Tap a question below to start 👇</p>
               </div>
             )}
             {messages.map((m, i) => (
